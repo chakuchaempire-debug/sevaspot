@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>उत्पन्न घोषणापत्र - Digital Filler Portal</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-canvas: #f1f5f9;
+            --sidebar-width: 340px;
+            --border-ui: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Serif Devanagari', 'Arial', sans-serif;
+            background-color: var(--bg-canvas);
+            color: #000000;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Side Panel Controls */
+        .control-panel {
+            width: var(--sidebar-width);
+            background-color: #ffffff;
+            border-right: 1px solid var(--border-ui);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        .form-control {
+            padding: 10px;
+            border: 1px solid var(--border-ui);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .action-btn {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .reset-btn {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .reset-btn:hover {
+            background-color: #dc2626;
+        }
+
+        /* Document Sheet Canvas */
+        .document-container {
+            margin-left: var(--sidebar-width);
+            flex-grow: 1;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-y: auto;
+        }
+
+        .a4-sheet {
+            background-color: #ffffff;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 25mm 20mm;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+            box-sizing: border-box;
+            line-height: 2.3;
+            font-size: 17px;
+        }
+
+        /* Passport Photograph Frame */
+        .photo-frame {
+            width: 3.5cm;
+            height: 4.5cm;
+            border: 1px solid #000000;
+            position: absolute;
+            top: 25mm;
+            right: 20mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: #fafafa;
+            overflow: hidden;
+            transition: background 0.2s;
+        }
+
+        .photo-frame:hover {
+            background-color: #f1f5f9;
+        }
+
+        .photo-frame span {
+            font-size: 11px;
+            color: #64748b;
+            text-align: center;
+            padding: 4px;
+        }
+
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Document Typography Details */
+        .doc-title {
+            text-align: center;
+            font-size: 26px;
+            font-weight: bold;
+            margin-top: 35mm;
+            margin-bottom: 40px;
+            letter-spacing: 0.5px;
+        }
+
+        .doc-paragraph {
+            text-align: justify;
+            text-indent: 40px;
+            margin-bottom: 25px;
+        }
+
+        .no-indent {
+            text-indent: 0 !important;
+        }
+
+        /* Fillable Text Field Formatting */
+        .fillable-field {
+            border: none;
+            border-bottom: 1px dashed #475569;
+            background-color: transparent;
+            font-family: inherit;
+            font-size: 17px;
+            font-weight: bold;
+            color: #1e3a8a;
+            padding: 0 5px;
+            text-align: center;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .fillable-field:focus {
+            border-bottom: 2px solid var(--primary-color);
+            background-color: #eff6ff;
+        }
+
+        .fillable-field::placeholder {
+            color: #94a3b8;
+            font-weight: normal;
+            font-size: 13px;
+        }
+
+        /* Footer Layout Alignments */
+        .doc-footer {
+            margin-top: 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .footer-left {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-right {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+            width: 50%;
+        }
+
+        .signature-space {
+            margin-bottom: 50px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* Print Settings Stylesheet Override */
+        @media print {
+            body {
+                background-color: #ffffff;
+            }
+            .control-panel {
+                display: none !important;
+            }
+            .document-container {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            .a4-sheet {
+                box-shadow: none !important;
+                padding: 15mm 15mm !important;
+                width: 100% !important;
+            }
+            .fillable-field {
+                border-bottom: none !important;
+                color: #000000 !important;
+            }
+            .fillable-field::placeholder {
+                color: transparent !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Control Actions Panel -->
+    <div class="control-panel">
+        <div class="panel-title">घोषणापत्र व्यवस्थापक</div>
+        
+        <div class="input-group">
+            <label for="datePicker">दिनांक निवडा:</label>
+            <input type="date" id="datePicker" class="form-control" onchange="syncDate(this.value)">
+        </div>
+
+        <div class="input-group">
+            <label for="financialYear">उत्पन्न आर्थिक वर्ष:</label>
+            <input type="text" id="financialYear" class="form-control" value="2024-2025" oninput="syncYear(this.value)">
+        </div>
+
+        <button class="action-btn" onclick="window.print()">
+            🖨️ Print / Save as PDF
+        </button>
+
+        <button class="reset-btn" onclick="resetForm()">
+            🔄 सर्व माहिती साफ करा
+        </button>
+    </div>
+
+    <!-- Printable Document Canvas -->
+    <div class="document-container">
+        <div class="a4-sheet">
+            
+            <!-- Passport Photo Input Frame Selector -->
+            <input type="file" id="fileInput" accept="image/*" onchange="previewPhoto(event)">
+            <div class="photo-frame" onclick="document.getElementById('fileInput').click()" id="photoContainer">
+                <span>येथे फोटो लावा<br>(Click to Upload)</span>
+            </div>
+
+            <!-- Title Header -->
+            <div class="doc-title">उत्पन्न घोषणापत्र</div>
+
+            <!-- Body Contents directly mapping image_41b99c.png layout -->
+            <p class="doc-paragraph">
+                मा. श्री / श्रीमती <input type="text" class="fillable-field" style="width: 290px;" placeholder="अर्जदाराचे संपूर्ण नाव"> 
+                श्री <input type="text" class="fillable-field" style="width: 260px;" placeholder="वडील किंवा पतीचे नाव"> यांंंचा मुलगा/मुलगी/पत्नी 
+                वय <input type="text" class="fillable-field" style="width: 70px;" placeholder="वय"> 
+                व्यवसाय <input type="text" class="fillable-field" style="width: 200px;" placeholder="उदा. शेती/नोकरी"> 
+                रा. <input type="text" class="fillable-field" style="width: 280px;" placeholder="ग्रामपंचायत/शहर नाव"> 
+                ता. <b>हदगाव</b> जि. <b>नांदेड</b> येथील रहिवासी आहे व माझे उत्पन्न <input type="text" id="docYear" class="fillable-field" style="width: 110px;" value="2024-2025">, 
+                <input type="text" class="fillable-field" style="width: 180px;" placeholder="उत्पन्न (अंकात)"> हजार आहे व मला 
+                <input type="text" class="fillable-field" style="width: 320px;" placeholder="उत्पन्न कशासाठी हवे आहे / विवरण"> या करिता स्वयंघोषणा आधारे करतो / करते की मी स्वयं संक्षिप्त उत्पन्न केलेल्या प्रति माझ्या या मूळ कागदपत्राच्या सत्यप्रति सह ही स्वयंघोषणापत्र देत आहे.
+            </p>
+
+            <p class="doc-paragraph no-indent">
+                वरील सर्व माहिती माझ्या समजुतीप्रमाणे खरी आहे. सदर माहिती खोटी आढळून आल्यास मी भारतीय दंड विधान 1960 चे कलम 1999 व 200 व अन्य कायद्यानुसार शिक्षेस पात्र राहीन याची मला जाणीव आहे.
+            </p>
+
+            <!-- Signature & Location Details Area -->
+            <div class="doc-footer">
+                <div class="footer-left">
+                    <div>दिनांक: <input type="text" id="docDate" class="fillable-field" style="width: 160px;" placeholder="दिनांक भरा"></div>
+                    <div>ठिकाण : हदगाव</div>
+                </div>
+                
+                <div class="footer-right">
+                    <div class="signature-space">अर्जदार</div>
+                    <div style="margin-top: 10px;">
+                        <input type="text" class="fillable-field" style="width: 240px; text-align: right;" placeholder="...............................................">
+                    </div>
+                    <div>रा. <input type="text" class="fillable-field" style="width: 150px;" placeholder="राहणार ठिकाण"> ता. हदगाव जि. नांदेड</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Controller Script Systems Logic -->
+    <script>
+        // Automatic Date Synchronization Manager
+        function syncDate(val) {
+            if(!val) return;
+            const dateObj = new Date(val);
+            const formattedDate = dateObj.getDate().toString().padStart(2, '0') + '/' + 
+                                  (dateObj.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                                  dateObj.getFullYear();
+            document.getElementById('docDate').value = formattedDate;
+        }
+
+        // Financial Year Sync Engine
+        function syncYear(val) {
+            document.getElementById('docYear').value = val;
+        }
+
+        // Photo Upload Rendering Pipeline
+        function previewPhoto(event) {
+            const container = document.getElementById('photoContainer');
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    container.innerHTML = `<img src="${e.target.result}" alt="Uploaded Photo">`;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Standard Workspace Clear Script Function
+        function resetForm() {
+            if(confirm("तुम्हाला फॉर्ममधील भरलेली सर्व माहिती काढून टाकायची आहे का?")) {
+                const fields = document.querySelectorAll('.fillable-field');
+                fields.forEach(field => {
+                    if(field.id !== 'docYear') field.value = '';
+                });
+                document.getElementById('datePicker').value = '';
+                document.getElementById('financialYear').value = '2024-2025';
+                document.getElementById('docYear').value = '2024-2025';
+                document.getElementById('photoContainer').innerHTML = `<span>येथे फोटो लावा<br>(Click to Upload)</span>`;
+                document.getElementById('fileInput').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
